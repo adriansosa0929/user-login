@@ -1,22 +1,31 @@
-@app.route('/api/login', methods=['POST'])
-def login():
-    data = request.json
-    user_id = data.get('id')
-    password = data.get('password')
-    
-    if not user_id or not password:
-        return jsonify({"error": "ID and Password required"}), 400
-        
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute("SELECT id, password, tier FROM users WHERE id = ?", (user_id,))
-        user = cursor.fetchone()
-        conn.close()
-        
-        if user and user['password'] == password:
-            return jsonify({"success": True, "tier": user['tier']})
-        else:
-            return jsonify({"error": "Invalid credentials"}), 401
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+if (loginBtn) {
+    loginBtn.addEventListener('click', async () => {
+      const id = authIdInput.value.trim();
+      const pass = authPassInput.value.trim();
+      if (id && pass) {
+        try {
+          const res = await fetch('http://localhost:5000/api/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id, password: pass })
+          });
+          const data = await res.json();
+          if (data.success) {
+            localStorage.setItem('kam_logged_in', 'true');
+            localStorage.setItem('kam_current_user', id);
+            localStorage.setItem('kam_tier', data.tier || 'Standard');
+            updatePortalView();
+          } else {
+            authError.textContent = data.error || "Invalid credentials.";
+            authError.style.display = 'block';
+          }
+        } catch (err) {
+            authError.textContent = "Server connection failed.";
+            authError.style.display = 'block';
+        }
+      } else {
+        authError.textContent = "ID and Passcode cannot be empty.";
+        authError.style.display = 'block';
+      }
+    });
+  }
